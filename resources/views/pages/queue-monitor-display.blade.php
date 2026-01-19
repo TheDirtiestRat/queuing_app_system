@@ -24,7 +24,7 @@
                 {{-- In a real app, replace this with an <img> or <video> tag --}}
                 <div class="absolute inset-0 bg-linear-to-br from-blue-600 to-indigo-900 opacity-80"></div>
                 <div class="relative text-center p-10">
-                    <p class="text-white/60 uppercase tracking-widest mb-2">BYMRDRATS with the PROGRAMMERS GUILD</p>
+                    {{-- <p class="text-white/60 uppercase tracking-widest mb-2">BYMRDRATS with the PROGRAMMERS GUILD</p> --}}
                     <h2 class="text-5xl font-bold text-white mb-6 text-nowrap">ACLC ORMOC</h2>
                     <div class="badge badge-primary p-4">Please have your ticketS ready</div>
                 </div>
@@ -81,6 +81,7 @@
                     </div>
                 </div>
 
+                <button class="basis-auto btn" id="btnAPI" onclick='window_calling_recieved("0")'>disable isCalling</button>
                 <button class="basis-auto btn hidden" id="btnSound" onclick='playAudio()'>Flash with
                     sound</button>
             </div>
@@ -91,7 +92,10 @@
             class="h-12 bg-neutral text-neutral-content rounded-xl flex flex-row items-center overflow-hidden relative">
 
             <div class="whitespace-nowrap overflow-hidden basis-full flex items-center gap-10">
-                <p class="text-lg animate-marquee">🕒 Our operating hours are 8:00 AM to 5:00 PM Monday-Saturday.</p>
+                <p class="text-lg animate-marquee">
+                    BY MR DIRTYRATS with the PROGRAMMERS GUILD  
+                    🕒 Our operating hours are 8:00 AM to 5:00 PM Monday-Saturday.
+                </p>
 
             </div>
 
@@ -161,6 +165,25 @@
             dot.classList.add(animationClass);
         }
 
+        function window_calling_recieved(win_id) {
+            fetch('/api/window_call_recieved', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    "window_id": win_id,
+                    // Add other data as needed
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+            })
+            .catch(error => console.error('Error fetching queue data:', error));
+        }
+
         function updateWindow(windows) {
             windows.forEach(window => {
                 const windowElement = document.getElementById(`window_${ window.window_name }`);
@@ -171,8 +194,8 @@
                         if (windowElement.innerText != toChangeText || window.isCalling) {
                             flashWindow(window.window_name)
 
-                            window_calling_recieved(window.id)
-                            // console.log(window.id)
+                            window_calling_recieved(window.id)  
+                            console.log(window.id)
                         }
 
                         windowElement.innerText = toChangeText // Update the ticket element text
@@ -190,29 +213,12 @@
                     // Update windows
                     updateQueue(data['tickets'], data['pending'])
                     updateWindow(data['windows'])
-                    // console.log(data)
+                    // console.log(data['windows'])
                 })
                 .catch(error => console.error('Error fetching queue data:', error));
         }
 
-        function window_calling_recieved(window) {
-            fetch('/api/window_call_recieved', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({
-                    "window_id": window,
-                    // Add other data as needed
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data['isCalling']);
-            })
-            .catch(error => console.error('Error fetching queue data:', error));
-        }
+        
 
         setInterval(updateMonitor, 1000);
         updateMonitor();

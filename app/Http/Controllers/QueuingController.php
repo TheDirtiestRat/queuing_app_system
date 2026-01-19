@@ -148,7 +148,6 @@ class QueuingController extends Controller
     // apis
     public function monitor_update()
     {
-        // $windows = DB::table('windows')->latest()->get();
         $windows = DB::table('windows')
             ->leftJoin('queue', 'windows.queue_ticket', '=', 'queue.id')
             ->latest('windows.created_at')
@@ -184,12 +183,16 @@ class QueuingController extends Controller
             'window_id' => 'required',
         ]);
 
-        DB::table('windows')->where("id", "=", $request->input('window_id'))->update([
-            "isCalling" => 0
+        DB::table('windows')->update([
+            "isCalling" => 0,
         ]);
+
+        $ticket = DB::table('windows')->where("id", $request->input('window_id'))->first();
 
         return response()->json([
             'isCalling' => false,
+            'win_id' => $request->input('window_id'),
+            // 'win_calling' => $ticket->isCalling,
         ]);
     }
 }

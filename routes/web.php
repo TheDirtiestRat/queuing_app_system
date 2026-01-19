@@ -3,9 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\QueuingController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [QueuingController::class, "menu_page"]);
 
 Route::get('/display-monitor', [QueuingController::class, "monitor_page"]);
 
