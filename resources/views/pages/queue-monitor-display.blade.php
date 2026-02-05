@@ -20,27 +20,44 @@
 
             {{-- Advertisement / Video --}}
             <div
-                class="basis-full bg-black rounded-3xl relative overflow-hidden flex items-center justify-center shadow-inner">
-                {{-- In a real app, replace this with an <img> or <video> tag --}}
-                <div class="absolute inset-0 bg-linear-to-br from-blue-600 to-indigo-900 opacity-80"></div>
-                <div class="relative text-center p-10">
-                    {{-- <p class="text-white/60 uppercase tracking-widest mb-2">BYMRDRATS with the PROGRAMMERS GUILD</p> --}}
-                    <h2 class="text-5xl font-bold text-white mb-6 text-nowrap">ACLC ORMOC</h2>
-                    <div class="badge badge-primary p-4">Please have your ticketS ready</div>
+                class="basis-full flex flex-col rounded-3xl overflow-hidden bg-linear-to-r from-blue-900 via-blue-800  to-black">
+                <video class="basis-full bg-black" id="videoPlayer" autoplay>
+                    <source src="{{ asset('/storage/videos/motion_a.mp4') }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="basis-auto flex flex-row gap-4 items-center p-3 px-4">
+                    <h2 class="text-4xl font-bold text-white text-nowrap">ACLC ORMOC</h2>
+                    <div class="text-white  ">Please have your tickets ready</div>
                 </div>
             </div>
+            {{-- <div
+                class="basis-full bg-black rounded-3xl relative overflow-hidden flex items-center justify-center shadow-inner">
+                {{-- In a real app, replace this with an <img> or <video> tag --}
+                <div class="absolute inset-0 bg-linear-to-br from-blue-600 to-indigo-900 opacity-80"></div>
+                <div id="play_video_area" class="relative text-center flex flex-col">
+                    <video class="basis-full" autoplay>
+                        <source src="{{ asset('/storage/videos/motion_a.mp4') }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    {{-- <p class="text-white/60 uppercase tracking-widest mb-2">BYMRDRATS with the PROGRAMMERS GUILD</p> --}
+                    <div class="flex flex-row items-center justify-between p-4">
+                        <h2 class="text-4xl font-bold text-white text-nowrap">ACLC ORMOC</h2>
+                        <div class="badge badge-primary p-4">Please have your tickets ready</div>
+                    </div>
+                </div>
+            </div> --}}
 
             {{-- Current Tickets (Now Serving) --}}
-            <div class="basis-full flex flex-col gap-4">
+            <div class="basis-1/3 flex flex-col gap-4">
                 <div
                     class="text-center py-2 bg-primary text-primary-content rounded-xl font-bold uppercase tracking-widest">
                     Now Serving
                 </div>
-                <div class="basis-full grid grid-cols-2 gap-3">
+                <div class="basis-full grid grid-cols-@if (count($windows) <= 3) 1 @else 2 @endif gap-3">
                     @foreach ($windows as $window)
                         <div
                             class="grow basis-full bg-black rounded-3xl relative overflow-hidden flex items-center justify-center">
-                            <div class="bg-gray-300 absolute w-full h-full"
+                            <div class="bg-gray-300 border border-gray-400 absolute w-full h-full"
                                 id="window_panel_{{ $window->window_name }}"></div>
                             <div class=" absolute rounded-xl p-4 flex flex-col shadow w-full h-full">
                                 <p class="text-2xl font-bold text-base-content/70 mb-2 text-center">
@@ -67,7 +84,7 @@
                         class="basis-full bg-white rounded-2xl p-4 flex flex-row items-center justify-between shadow-sm">
                         <div class="flex items-center gap-4">
                             <span
-                                class="w-10 rounded-full bg-base-200 flex items-center justify-center font-bold">{{ $i }}</span>
+                                class="w-10 rounded-full bg-base-200 flex items-center justify-center font-bold">{{ $i + 1 }}</span>
                             <p class="text-4xl font-black font-mono text-nowrap" id="queue_{{ $i }}">---</p>
                             <div class="badge badge-ghost font-semibold">Ready</div>
                         </div>
@@ -81,7 +98,7 @@
                     </div>
                 </div>
 
-                <button class="basis-auto btn" id="btnAPI" onclick='window_calling_recieved("0")'>disable isCalling</button>
+                {{-- <button class="basis-auto btn" id="btnAPI" onclick='window_calling_recieved("0")'>disable isCalling</button> --}}
                 <button class="basis-auto btn hidden" id="btnSound" onclick='playAudio()'>Flash with
                     sound</button>
             </div>
@@ -89,11 +106,11 @@
 
         {{-- 3. Bottom Ticker --}}
         <div
-            class="h-12 bg-neutral text-neutral-content rounded-xl flex flex-row items-center overflow-hidden relative">
+            class="h-12 bg-linear-to-r from-blue-900 via-blue-800  to-black text-neutral-content rounded-xl flex flex-row items-center overflow-hidden relative">
 
             <div class="whitespace-nowrap overflow-hidden basis-full flex items-center gap-10">
                 <p class="text-lg animate-marquee">
-                    BY MR DIRTYRATS with the PROGRAMMERS GUILD  
+                    BY MR DIRTYRATS with the PROGRAMMERS GUILD
                     🕒 Our operating hours are 8:00 AM to 5:00 PM Monday-Saturday.
                 </p>
 
@@ -106,7 +123,8 @@
     </div>
 
     {{-- audios --}}
-    <audio id="soundPlayer" src="{{ asset('/storage/sounds/notification_sound_1.mp3') }}" preload="auto" allow="autoplay"></audio>
+    <audio id="soundPlayer" src="{{ asset('/storage/sounds/notification_sound_1.mp3') }}" preload="auto"
+        allow="autoplay"></audio>
 
     <style>
         @keyframes marquee {
@@ -136,7 +154,7 @@
         // Update the monitor by interval
         function updateQueue(tickets, pendings) {
             const pendingElement = document.getElementById(`pending_out`);
-            pendingElement.innerText = pendings
+            pendingElement.innerText = pendings - 5
 
             for (let i = 0; i <= tickets.length; i++) {
                 if (tickets[i]) {
@@ -152,6 +170,32 @@
             theSound.play();
         }
 
+        function speak(text_to_speak = "Calling A-002 on Window 1!") {
+            if ('speechSynthesis' in window) {
+                // Create a SpeechSynthesisUtterance
+                const utterance = new SpeechSynthesisUtterance(text_to_speak);
+
+                // 2. Customize properties (optional)
+                utterance.volume = 1; // 0 to 1
+                utterance.rate = 0.8; // 0.1 to 10
+                utterance.pitch = 1.3; // 0 to 2
+                utterance.lang = 'en-US'; // BCP 47 language tag
+
+                // Select a voice
+                const voices = speechSynthesis.getVoices();
+                utterance.voice = voices[0]; // Choose a specific voice
+
+                utterance.onend = function(event) {
+                    console.log('Speech finished in ' + event.elapsedTime + ' seconds.');
+                };
+
+                // Speak the text
+                speechSynthesis.speak(utterance);
+            } else {
+                console.log('Speech synthesis not supported in this browser.');
+            }
+        }
+
         function flashWindow(elemet_id) {
             const dot = document.getElementById(`window_panel_${elemet_id}`);
             // Using an arbitrary value "once" ping we discussed earlier
@@ -165,23 +209,25 @@
             dot.classList.add(animationClass);
         }
 
+
+
         function window_calling_recieved(win_id) {
             fetch('/api/window_call_recieved', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({
-                    "window_id": win_id,
-                    // Add other data as needed
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        "window_id": win_id,
+                        // Add other data as needed
+                    })
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);
-            })
-            .catch(error => console.error('Error fetching queue data:', error));
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                })
+                .catch(error => console.error('Error fetching queue data:', error));
         }
 
         function updateWindow(windows) {
@@ -194,7 +240,10 @@
                         if (windowElement.innerText != toChangeText || window.isCalling) {
                             flashWindow(window.window_name)
 
-                            window_calling_recieved(window.id)  
+                            window_calling_recieved(window.id)
+
+                            // play text to speech
+                            speak("Calling the Number " + toChangeText + " on " + window.window_name + "!");
                             console.log(window.id)
                         }
 
@@ -218,10 +267,34 @@
                 .catch(error => console.error('Error fetching queue data:', error));
         }
 
-        
+
 
         setInterval(updateMonitor, 1000);
         updateMonitor();
+    </script>
+
+    <script>
+        var videoPlayer = document.getElementById('videoPlayer');
+        var playlist = ["{{ asset('/storage/videos/video_A.mp4') }}",
+            "{{ asset('/storage/videos/video_B.mp4') }}",
+        ]; // Array of video sources
+        var currentVideo = 0;
+
+        function playNextVideo() {
+            // Set the source of the video player
+            videoPlayer.src = playlist[currentVideo];
+            // Load the new source and play the video
+            videoPlayer.load();
+            videoPlayer.play();
+            // Increment the video counter, looping back to the start if at the end
+            currentVideo = (currentVideo + 1) % playlist.length;
+        }
+
+        // Add an event listener to call the function when the current video ends
+        videoPlayer.addEventListener('ended', playNextVideo, false);
+
+        // Start the first video
+        playNextVideo();
     </script>
 </body>
 

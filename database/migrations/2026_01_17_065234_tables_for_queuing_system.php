@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->text("number");
             $table->enum("type", ["A","B", "C"])->default("A");
-            $table->enum('status', ["ready","pending",'done'])->default("ready");
+            $table->enum('status', ["ready","pending",'done','reserved'])->default("ready");
             $table->timestamps();
         });
 

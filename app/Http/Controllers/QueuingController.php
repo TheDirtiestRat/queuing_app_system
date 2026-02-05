@@ -31,9 +31,11 @@ class QueuingController extends Controller
             return back();
         }
         $cur_ticket = DB::table('queue')->where('id', $window->queue_ticket)->first();
-        $tickets = DB::table('queue')->where("status", "!=", "done")->where("status", "!=", "pending")->orderBy('number', 'asc')->limit(10)->get();
+        $tickets = DB::table('queue')->where("status", "!=", "done")->where("status", "!=", "pending")->where("status", "!=", "reserved")->orderBy('number', 'asc')->limit(10)->get();
 
-        return view('admin.window_menu', compact('window', 'cur_ticket','tickets'));
+        $reserved_tickets = DB::table('queue')->where("status", "=", "reserved")->orderBy('number', 'asc')->latest()->get();
+
+        return view('admin.window_menu', compact('window', 'cur_ticket','tickets','reserved_tickets'));
     }
 
     // tickets function
@@ -71,7 +73,25 @@ class QueuingController extends Controller
 
     public function next_queue(string $window_id)
     {
-        $ticket = DB::table('queue')->where("status", "!=", "done")->where("status", "!=", "pending")->orderBy('number', 'asc')->first();
+        $ticket = DB::table('queue')->where("status", "!=", "done")->where("status", "!=", "pending")->where("status", "!=", "reserved")->orderBy('number', 'asc')->first();
+
+        if (!$ticket) {
+            return back();
+        }
+
+        DB::table('queue')->where("id", $ticket->id)->update([
+            "status" => "done",
+        ]);
+        DB::table('windows')->where("id", $window_id)->update([
+            "queue_ticket" => $ticket->id,
+        ]);
+
+        return redirect('/admin/window/' . $window_id);
+    }
+
+    public function select_queue(string $window_id, $queue_id)
+    {
+        $ticket = DB::table('queue')->where("status", "!=", "done")->where("status", "!=", "pending")->where("id", "=", $queue_id)->first();
 
         if (!$ticket) {
             return back();
@@ -89,8 +109,24 @@ class QueuingController extends Controller
 
     public function done_queue(string $window_id, $queue_id)
     {
+        if ($queue_id == null) {
+            return redirect('/admin/window/' . $window_id);
+        }
+
         DB::table('queue')->where("id", $queue_id)->update([
             "status" => "done",
+        ]);
+        DB::table('windows')->where("id", $window_id)->update([
+            "queue_ticket" => null,
+        ]);
+
+        return redirect('/admin/window/' . $window_id);
+    }
+
+    public function reserved_queue(string $window_id, $queue_id)
+    {
+        DB::table('queue')->where("id", $queue_id)->update([
+            "status" => "reserved",
         ]);
         DB::table('windows')->where("id", $window_id)->update([
             "queue_ticket" => null,

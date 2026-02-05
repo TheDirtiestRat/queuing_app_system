@@ -18,11 +18,25 @@
             <div class="flex flex-row gap-3 mt-3">
                 <div class="basis-full">
                     <button type="submit" class="btn btn-secondary rounded-md  w-full"
-                    onclick="window_calling('{{ $window->id }}')">Call back</button>
+                        onclick="window_calling('{{ $window->id }}')">Call back</button>
                 </div>
-
-                <form action="{{ url('/admin/done_queue/' . $window->id . '-' . $window->queue_ticket) }}" class="basis-full"
-                    method="POST">
+                {{-- check if the que is empty --}}
+                @php
+                    $cur_win_que = 0;
+                    if ($window->queue_ticket != 0) {
+                        $cur_win_que = $window->queue_ticket;
+                    }else {
+                        $cur_win_que = -1;
+                    }
+                @endphp
+                <form action="{{ url('/admin/reserved_queue/' . $window->id . '-' . $cur_win_que) }}"
+                    class="basis-full" method="POST">
+                    @csrf
+                    <button type="submit" class="btn btn-primary rounded-md  w-full">Reserved</button>
+                </form>
+                
+                <form action="{{ url('/admin/done_queue/' . $window->id . '-' . $cur_win_que) }}"
+                    class="basis-full" method="POST">
                     @csrf
                     <button type="submit" class="btn btn-primary rounded-md  w-full">Done</button>
                 </form>
@@ -31,20 +45,47 @@
                     <button type="submit" class="btn btn-primary rounded-md  w-full">Next</button>
                 </form>
             </div>
+            {{-- reserved taks --}}
+            <div class="flex flex-col gap-3 pt-3">
+                <p class="text-2xl font-bold text-base-content mb-2 text-center">
+                    Reserved Tasked
+                </p>
+                <div class="grid grid-cols-3 gap-3">
+                    @foreach ($reserved_tickets as $ticket)
+                        {{-- Repeatable Ticket Card --}}
+                        <div class="flex basis-full shadow items-center justify-between p-3 bg-base-200 rounded-lg gap-3">
+                            <div class="basis-full flex items-center flex-row gap-2 justify-between">
+                                <p class="text-xs opacity-60">Ticket</p>
+                                <p class="font-mono font-bold text-lg">{{ $ticket->type }}-{{ $ticket->number }}</p>
+                            </div>
+                            <form action="{{ url('/admin/select_queue/' . $window->id . '-' . $ticket->id) }}"
+                                class="basis-auto" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-sm btn-primary rounded-md text-nowrap">Do
+                                    task</button>
+                            </form>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
         </div>
         {{-- pending task --}}
-        <div class="basis-1/4 bg-base-100 rounded-xl p-2">
+        <div class="basis-auto bg-base-100 rounded-xl p-2">
             <p class="text-2xl font-bold text-base-content mb-2 text-center">Pending Task
             </p>
             <div class="flex flex-col gap-2">
                 @foreach ($tickets as $ticket)
                     {{-- Repeatable Ticket Card --}}
-                    <div class="flex shadow items-center justify-between p-3 bg-base-200 rounded-lg">
-                        <div>
-                            <p class="font-mono font-bold text-lg">{{ $ticket->type }}-{{ $ticket->number }}</p>
+                    <div class="flex w-60 shadow items-center justify-between p-3 bg-base-200 rounded-lg gap-3">
+                        <div class="basis-full flex items-center flex-row gap-2 justify-between">
                             <p class="text-xs opacity-60">Ticket</p>
+                            <p class="font-mono font-bold text-lg">{{ $ticket->type }}-{{ $ticket->number }}</p>
                         </div>
-                        <button class="btn rounded-md shadow btn-ghost btn-sm text-nowrap">Do task</button>
+                        <form action="{{ url('/admin/select_queue/' . $window->id . '-' . $ticket->id) }}"
+                            class="basis-auto" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-primary rounded-md text-nowrap">Do task</button>
+                        </form>
                     </div>
                 @endforeach
             </div>
@@ -60,7 +101,7 @@
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify({
-                        "window_id" : win_id,
+                        "window_id": win_id,
                         // Add other data as needed
                     })
                 })
