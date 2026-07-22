@@ -35,18 +35,8 @@ class DatabaseSeeder extends Seeder
         ]);
 
         for ($tickets = 1; $tickets <= 50; $tickets++) {
-            $s_num = "";
-
-            if ($tickets < 100 && $tickets >= 10) {
-                $s_num = "0" . $tickets;
-            } else if ($tickets < 10) {
-                $s_num = "00" . $tickets;
-            } else {
-                $s_num = "" . $tickets;
-            }
-
             DB::table('queue')->insert([
-                "number" => $s_num,
+                "number" => str_pad($tickets, 3, '0', STR_PAD_LEFT),
                 "type" => "A",
             ]);
         }

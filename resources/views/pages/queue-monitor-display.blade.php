@@ -21,8 +21,7 @@
             {{-- Advertisement / Video --}}
             <div
                 class="basis-full flex flex-col rounded-3xl overflow-hidden bg-linear-to-r from-blue-900 via-blue-800  to-black">
-                <video class="basis-full bg-black" id="videoPlayer" autoplay>
-                    <source src="{{ asset('/storage/videos/motion_a.mp4') }}" type="video/mp4">
+                <video class="basis-full bg-black" id="videoPlayer" autoplay muted playsinline>
                     Your browser does not support the video tag.
                 </video>
                 <div class="basis-auto flex flex-row gap-4 items-center p-3 px-4">
@@ -30,22 +29,7 @@
                     <div class="text-white  ">Please have your tickets ready</div>
                 </div>
             </div>
-            {{-- <div
-                class="basis-full bg-black rounded-3xl relative overflow-hidden flex items-center justify-center shadow-inner">
-                {{-- In a real app, replace this with an <img> or <video> tag --}
-                <div class="absolute inset-0 bg-linear-to-br from-blue-600 to-indigo-900 opacity-80"></div>
-                <div id="play_video_area" class="relative text-center flex flex-col">
-                    <video class="basis-full" autoplay>
-                        <source src="{{ asset('/storage/videos/motion_a.mp4') }}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                    {{-- <p class="text-white/60 uppercase tracking-widest mb-2">BYMRDRATS with the PROGRAMMERS GUILD</p> --}
-                    <div class="flex flex-row items-center justify-between p-4">
-                        <h2 class="text-4xl font-bold text-white text-nowrap">ACLC ORMOC</h2>
-                        <div class="badge badge-primary p-4">Please have your tickets ready</div>
-                    </div>
-                </div>
-            </div> --}}
+
 
             {{-- Current Tickets (Now Serving) --}}
             <div class="basis-1/3 flex flex-col gap-4">
@@ -126,6 +110,15 @@
     <audio id="soundPlayer" src="{{ asset('/storage/sounds/notification_sound_1.mp3') }}" preload="auto"
         allow="autoplay"></audio>
 
+    {{-- hidden file input for loading local videos --}}
+    <input type="file" id="localVideoInput" accept="video/*" multiple
+        style="position:fixed;opacity:0;pointer-events:none;width:0;height:0">
+    <button id="loadLocalBtn"
+        class="fixed bottom-20 right-4 btn btn-xs btn-ghost opacity-30 hover:opacity-100 z-50"
+        title="Load local video files">Load Videos</button>
+    <div id="localVideoCount"
+        class="fixed bottom-14 right-4 text-xs opacity-0 transition-opacity z-50"></div>
+
     <style>
         @keyframes marquee {
             0% {
@@ -154,7 +147,7 @@
         // Update the monitor by interval
         function updateQueue(tickets, pendings) {
             const pendingElement = document.getElementById(`pending_out`);
-            pendingElement.innerText = pendings - 5
+            pendingElement.innerText = Math.max(0, pendings - 5)
 
             for (let i = 0; i <= tickets.length; i++) {
                 if (tickets[i]) {
@@ -275,26 +268,80 @@
 
     <script>
         var videoPlayer = document.getElementById('videoPlayer');
-        var playlist = ["{{ asset('/storage/videos/video_A.mp4') }}",
-            "{{ asset('/storage/videos/video_B.mp4') }}",
-        ]; // Array of video sources
+        var playlist = [
+            @foreach ($videos as $video)
+                "{{ $video->video_url }}",
+            @endforeach
+        ];
         var currentVideo = 0;
 
-        function playNextVideo() {
-            // Set the source of the video player
-            videoPlayer.src = playlist[currentVideo];
-            // Load the new source and play the video
+        function playVideo(index) {
+            if (playlist.length === 0 || !playlist[index]) return;
+            videoPlayer.src = playlist[index];
+            videoPlayer.volume = 0.3;
             videoPlayer.load();
-            videoPlayer.play();
-            // Increment the video counter, looping back to the start if at the end
-            currentVideo = (currentVideo + 1) % playlist.length;
+            var promise = videoPlayer.play();
+            if (promise) {
+                promise.catch(function(err) {
+                    console.log('Could not play video, retrying in 2s...', err);
+                    setTimeout(function() { playVideo(index); }, 2000);
+                });
+            }
         }
 
-        // Add an event listener to call the function when the current video ends
-        videoPlayer.addEventListener('ended', playNextVideo, false);
+        function playNextVideo() {
+            currentVideo = (currentVideo + 1) % playlist.length;
+            playVideo(currentVideo);
+        }
 
-        // Start the first video
-        playNextVideo();
+        function loadLocalVideos() {
+            document.getElementById('localVideoInput').click();
+        }
+
+        document.getElementById('localVideoInput').addEventListener('change', function(e) {
+            var files = e.target.files;
+            if (!files.length) return;
+
+            var wasEmpty = playlist.length === 0;
+
+            for (var i = 0; i < files.length; i++) {
+                if (files[i].type.startsWith('video/')) {
+                    playlist.push(URL.createObjectURL(files[i]));
+                }
+            }
+
+            var countEl = document.getElementById('localVideoCount');
+            countEl.textContent = playlist.length + ' video(s)';
+            countEl.classList.remove('opacity-0');
+            countEl.classList.add('opacity-100');
+            setTimeout(function() {
+                countEl.classList.remove('opacity-100');
+                countEl.classList.add('opacity-0');
+            }, 4000);
+
+            if (wasEmpty) {
+                if (playlist.length > 0) {
+                    videoPlayer.addEventListener('ended', playNextVideo, false);
+                    videoPlayer.addEventListener('error', function() {
+                        playNextVideo();
+                    });
+                    playVideo(0);
+                }
+            }
+
+            this.value = '';
+        });
+
+        document.getElementById('loadLocalBtn').addEventListener('click', loadLocalVideos);
+
+        if (playlist.length > 0) {
+            videoPlayer.addEventListener('ended', playNextVideo, false);
+            videoPlayer.addEventListener('error', function() {
+                console.log('Video error, skipping to next');
+                playNextVideo();
+            });
+            playVideo(0);
+        }
     </script>
 </body>
 

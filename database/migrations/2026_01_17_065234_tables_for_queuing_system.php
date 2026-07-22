@@ -29,12 +29,11 @@ return new class extends Migration
         });
 
         // this has become useless now
-        // Schema::create('taken_task', function (Blueprint $table) {
-        //     $table->id();
-        //     $table->foreignId('queue_id')->constrained('queue')->onDelete('cascade');
-        //     $table->foreignId('window_id')->constrained('windows')->onDelete('cascade');
-        //     $table->timestamps();
-        // });
+        Schema::create('video_list', function (Blueprint $table) {
+            $table->id();
+            $table->text('video_path');
+            $table->timestamps();
+        });
     }
 
     /**

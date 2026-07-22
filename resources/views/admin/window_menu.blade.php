@@ -20,25 +20,17 @@
                     <button type="submit" class="btn btn-secondary rounded-md  w-full"
                         onclick="window_calling('{{ $window->id }}')">Call back</button>
                 </div>
-                {{-- check if the que is empty --}}
-                @php
-                    $cur_win_que = 0;
-                    if ($window->queue_ticket != 0) {
-                        $cur_win_que = $window->queue_ticket;
-                    }else {
-                        $cur_win_que = -1;
-                    }
-                @endphp
-                <form action="{{ url('/admin/reserved_queue/' . $window->id . '-' . $cur_win_que) }}"
+                @php $ticketId = $cur_ticket->id ?? 0; @endphp
+                <form action="{{ $ticketId ? url('/admin/reserved_queue/' . $window->id . '-' . $ticketId) : '#' }}"
                     class="basis-full" method="POST">
                     @csrf
-                    <button type="submit" class="btn btn-primary rounded-md  w-full">Reserved</button>
+                    <button type="submit" class="btn btn-primary rounded-md  w-full" {{ $ticketId ? '' : 'disabled' }}>Reserved</button>
                 </form>
                 
-                <form action="{{ url('/admin/done_queue/' . $window->id . '-' . $cur_win_que) }}"
+                <form action="{{ $ticketId ? url('/admin/done_queue/' . $window->id . '-' . $ticketId) : '#' }}"
                     class="basis-full" method="POST">
                     @csrf
-                    <button type="submit" class="btn btn-primary rounded-md  w-full">Done</button>
+                    <button type="submit" class="btn btn-primary rounded-md  w-full" {{ $ticketId ? '' : 'disabled' }}>Done</button>
                 </form>
                 <form action="{{ url('/admin/next_queue/' . $window->id) }}" class="basis-full" method="POST">
                     @csrf
