@@ -320,7 +320,11 @@ class QueuingController extends Controller
             return back();
         }
 
-        Storage::delete($video->video_path);
+        $path = storage_path('app/' . $video->video_path);
+        if (file_exists($path)) {
+            unlink($path);
+        }
+
         DB::table('video_list')->where('id', $id)->delete();
 
         return back()->with('success', 'Video deleted successfully!');

@@ -161,21 +161,16 @@
 
 @section('admin-scripts')
 {{-- Video Preview Modal --}}
-<dialog id="video_preview_modal" class="modal">
+<dialog id="video_preview_modal" class="modal" onclick="if (event.target === this) this.close()">
     <div class="modal-box w-11/12 max-w-3xl p-4">
         <div class="flex justify-between items-center mb-3">
             <h3 class="text-lg font-bold" id="preview_modal_title">Video Preview</h3>
-            <form method="dialog">
-                <button class="btn btn-sm btn-circle btn-ghost">X</button>
-            </form>
+            <button class="btn btn-sm btn-circle btn-ghost" onclick="document.getElementById('video_preview_modal').close()">X</button>
         </div>
-        <video id="preview_video_player" class="w-full rounded-xl bg-black" controls muted>
+        <video id="preview_video_player" class="w-full rounded-xl bg-black" controls playsinline preload="metadata">
             Your browser does not support the video tag.
         </video>
     </div>
-    <form method="dialog" class="modal-backdrop">
-        <button>close</button>
-    </form>
 </dialog>
 
 <script>
@@ -190,12 +185,8 @@
             var name = this.getAttribute('data-name') || 'Video Preview';
             titleEl.innerText = name;
             player.src = url;
-            player.load();
             modal.showModal();
-            var promise = player.play();
-            if (promise) {
-                promise.catch(function() {});
-            }
+            player.play().catch(function() {});
         });
     });
 
@@ -206,7 +197,6 @@
     modal.addEventListener('close', function() {
         player.pause();
         player.removeAttribute('src');
-        player.load();
         titleEl.innerText = 'Video Preview';
     });
 
